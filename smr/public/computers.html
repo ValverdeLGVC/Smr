@@ -1,0 +1,923 @@
+<!-- Declara o documento como HTML5. -->
+<!DOCTYPE html>
+<!-- Documento de gerenciamento de ativos e empresas. -->
+<html lang="pt-BR">
+
+<!-- Metadados e dependências visuais da página. -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Computadores - PrevSystem</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+
+    body {
+        font-family: 'Inter', sans-serif;
+        scroll-behavior: smooth;
+    }
+
+    /* Animação suave para o banner de status no QR Code */
+    @keyframes pulseGlow {
+        0% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 15px 10px rgba(239, 68, 68, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+    }
+
+    .alert-pulse {
+        animation: pulseGlow 2s infinite;
+    }
+
+    /* Efeito Glassmorphism (Vidro Fosco) para os modais */
+    .glass {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* Custom Scrollbar moderna */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+    }
+</style>
+
+<!-- Corpo da tela administrativa de cadastro. -->
+<body class="app-page bg-slate-100 text-slate-800">
+
+    <!-- Botão de hambúrguer que abre a navegação no celular. -->
+    <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Abrir menu" aria-controls="appSidebar" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
+
+    <!-- Navegação lateral com ícones e links principais. -->
+    <aside id="appSidebar" class="app-sidebar" aria-label="Navegação principal">
+        <div class="sidebar-brand">
+            <img src="/favicon.svg" alt="">
+            <div class="sidebar-brand-text">
+                <strong>PrevSystem</strong>
+                <span>Gestão preventiva</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/dashboard.html" class="sidebar-link">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="/computers.html" class="sidebar-link is-active" aria-current="page">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M8 20h8M12 16v4"></path></svg>
+                <span>Computadores</span>
+            </a>
+            <a href="/qr-scanner.html?code=PC-ABC-0001" class="sidebar-link">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 20h2"></path></svg>
+                <span>QR Scanner</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <button id="logoutBtn" class="sidebar-logout" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5M14 16l4-4-4-4M18 12H9"></path></svg>
+                <span>Sair</span>
+            </button>
+        </div>
+    </aside>
+    <div id="sidebarOverlay" class="sidebar-overlay" aria-hidden="true"></div>
+
+    <!-- Container Principal -->
+    <main class="app-main max-w-7xl mx-auto p-6 responsive-main">
+        <div class="mobile-page-header flex justify-between items-center mb-6 responsive-heading">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800">Gestão de Computadores</h1>
+                <p class="text-sm text-slate-500">Cadastre e monitore os ativos de TI das empresas.</p>
+            </div>
+            <button id="newComputerBtn"
+                class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md transition-all">
+                + Novo Computador
+            </button>
+        </div>
+
+        <div class="mb-4 flex gap-3 responsive-actions">
+            <button id="newCompanyBtn" type="button"
+                class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors">
+                + Nova Empresa
+            </button>
+            <button id="refreshListBtn" type="button"
+                class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors">
+                Atualizar
+            </button>
+        </div>
+
+        <!-- Painel que define os valores padrão para computadores sem intervalo próprio. -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-6">
+            <div class="mb-4">
+                <h2 class="text-lg font-bold text-slate-800">Configuração da manutenção preventiva</h2>
+                <p class="text-sm text-slate-500">Defina o padrão global. Cada computador pode substituir este valor.</p>
+            </div>
+            <form id="maintenanceSettingsForm" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label for="defaultIntervalMonths" class="block text-xs font-semibold text-slate-600 uppercase mb-1">Intervalo padrão (meses)</label>
+                    <input type="number" id="defaultIntervalMonths" min="1" step="1" required
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label for="nearDueDays" class="block text-xs font-semibold text-slate-600 uppercase mb-1">Avisar antes (dias)</label>
+                    <input type="number" id="nearDueDays" min="0" step="1" required
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <button type="submit" class="min-h-[2.75rem] bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">Salvar configuração</button>
+            </form>
+        </section>
+
+        <!-- Tabela de empresas cadastradas e ações administrativas. -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+            <div class="flex justify-between items-center gap-4 p-5 border-b border-slate-200 responsive-heading">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800">Empresas cadastradas</h2>
+                    <p class="text-sm text-slate-500">Edite os dados ou exclua empresas sem computadores vinculados.</p>
+                </div>
+                <button id="newCompanyTableBtn" type="button"
+                    class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">
+                    + Cadastrar empresa
+                </button>
+            </div>
+            <div class="table-scroll">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Empresa</th>
+                            <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Contato</th>
+                            <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase">E-mail</th>
+                            <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="companiesTableBody" class="bg-white divide-y divide-slate-200">
+                        <!-- Linhas preenchidas pelo JavaScript. -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Painel de usuários administradores cadastrados. -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+            <div class="flex justify-between items-center gap-4 p-5 border-b border-slate-200 responsive-heading">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800">Usuários administradores</h2>
+                    <p class="text-sm text-slate-500">Gerencie quem pode acessar o painel do sistema.</p>
+                </div>
+                <button id="newUserBtn" type="button"
+                    class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">
+                    + Cadastrar usuário
+                </button>
+            </div>
+            <div class="table-scroll">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Nome</th>
+                            <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase">E-mail de acesso</th>
+                            <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Perfil</th>
+                            <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody" class="bg-white divide-y divide-slate-200">
+                        <!-- Linhas preenchidas pelo JavaScript. -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tabela de Computadores -->
+        <div class="table-scroll bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            Código / Nome</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            Setor / Usuário</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            Próxima Manutenção</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            Status</th>
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="computersTableBody" class="bg-white divide-y divide-slate-200">
+                    <!-- Renderizado via JS -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Modal de Cadastro -->
+    <div id="computerModal"
+        class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50" data-modal="computer">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto">
+            <button type="button" id="closeComputerModalBtn"
+                class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-xl font-bold" aria-label="Fechar modal">&times;</button>
+            <h2 id="computerModalTitle" class="text-xl font-bold text-slate-800 mb-4">Cadastrar Novo Computador</h2>
+
+            <form id="computerForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">ID / Código Único</label>
+                    <input type="text" id="unique_code" required placeholder="Ex: PC-ABC-0001"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Empresa</label>
+                    <select id="company_id" required
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="">Selecione uma empresa</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nome do PC</label>
+                        <input type="text" id="name" required placeholder="Ex: Recepção 01"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Setor</label>
+                        <input type="text" id="department" placeholder="Ex: Financeiro"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Usuário Responsável</label>
+                    <input type="text" id="assigned_user" placeholder="Ex: Maria Silva"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1" for="custom_interval_months">Intervalo deste computador (meses)</label>
+                        <input type="number" id="custom_interval_months" min="1" step="1" placeholder="Usar configuração global"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1" for="computerStatus">Status</label>
+                        <select id="computerStatus"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="EM_DIA">Em dia</option>
+                            <option value="PROXIMO_VENCIMENTO">Próximo do vencimento</option>
+                            <option value="ATRASADO">Atrasado</option>
+                            <option value="EM_MANUTENCAO">Em andamento / manutenção</option>
+                            <option value="COM_PROBLEMA">Com problema</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                    <button type="button" id="cancelComputerModalBtn"
+                        class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+                    <button type="submit"
+                        class="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-sm">Salvar
+                        Computador</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Cadastro de Empresa -->
+    <div id="companyModal"
+        class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[60]" data-modal="company">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto">
+            <button type="button" id="closeCompanyModalBtn"
+                class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-xl font-bold" aria-label="Fechar modal">&times;</button>
+            <h2 class="text-xl font-bold text-slate-800 mb-4">Cadastrar Nova Empresa</h2>
+
+            <form id="companyForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nome da Empresa</label>
+                    <input type="text" id="companyName" required placeholder="Ex: Tech Support LTDA"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">CNPJ</label>
+                        <input type="text" id="companyCnpj" placeholder="00.000.000/0000-00"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Contato</label>
+                        <input type="text" id="companyContact" placeholder="Nome do contato"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Telefone</label>
+                        <input type="text" id="companyPhone" placeholder="(11) 99999-9999"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">E-mail</label>
+                        <input type="email" id="companyEmail" placeholder="contato@empresa.com"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Endereço</label>
+                    <textarea id="companyAddress" rows="3" placeholder="Rua, número, cidade, estado"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                    <button type="button" id="cancelCompanyModalBtn"
+                        class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+                    <button type="submit"
+                        class="px-4 py-2 text-sm font-bold text-white bg-slate-800 hover:bg-slate-700 rounded-lg shadow-sm">Salvar Empresa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de cadastro e edição de usuário administrador. -->
+    <div id="userModal"
+        class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[60]" data-modal="user">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto">
+            <button type="button" id="closeUserModalBtn"
+                class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-xl font-bold" aria-label="Fechar modal">&times;</button>
+            <h2 id="userModalTitle" class="text-xl font-bold text-slate-800 mb-4">Cadastrar Usuário Administrador</h2>
+
+            <form id="userForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1" for="userName">Nome</label>
+                    <input type="text" id="userName" required placeholder="Ex: Maria Silva"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1" for="userEmail">E-mail de acesso</label>
+                    <input type="email" id="userEmail" required placeholder="usuario@empresa.com"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div id="currentPasswordGroup">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1" for="currentPassword">Senha atual</label>
+                    <input type="password" id="currentPassword" autocomplete="current-password"
+                        placeholder="Obrigatória para trocar a senha"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label id="newPasswordLabel" class="block text-xs font-semibold text-slate-600 uppercase mb-1" for="newPassword">Senha</label>
+                    <input type="password" id="newPassword" autocomplete="new-password" minlength="6"
+                        placeholder="Mínimo de 6 caracteres"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                    <button type="button" id="cancelUserModalBtn"
+                        class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+                    <button type="submit"
+                        class="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-sm">Salvar Usuário</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal do QR Code -->
+    <div id="qrModal"
+        class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center relative">
+            <button id="closeQrModalBtn" type="button"
+                class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+            <h2 class="text-lg font-bold text-slate-800 mb-4" id="qrModalTitle">QR Code do Ativo</h2>
+            <img id="qrImage" src="" alt="QR Code"
+                class="mx-auto mb-4 border border-slate-200 p-2 rounded-lg shadow-sm">
+            <a id="qrDownloadBtn" href="" download="qrcode.png"
+                class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg text-sm block w-full shadow-sm mb-2 transition-colors">Baixar
+                Imagem</a>
+            <a id="qrLink" href="" target="_blank" class="text-blue-600 text-xs hover:underline block">Abrir Link
+                Mobile</a>
+        </div>
+    </div>
+
+    <!-- Carrega a camada HTTP compartilhada. -->
+    <script src="/js/api.js"></script>
+    <script>
+        // Protege a tela contra acesso sem autenticação.
+        checkAuth();
+        setupSidebar();
+
+        // Guarda o ID da empresa que está sendo editada.
+        let editingCompanyId = null;
+        // Guarda o ID do usuário administrador que está sendo editado.
+        let editingUserId = null;
+        // Mantém os dados carregados para os botões da tabela sem usar onclick inline.
+        const companiesById = new Map();
+        const usersById = new Map();
+        // Mantém os computadores carregados para a ação Gerenciar.
+        const computersById = new Map();
+
+        function logout() {
+            localStorage.removeItem('prev_token');
+            if (window.sessionStorage) {
+                sessionStorage.clear();
+            }
+            window.location.replace('/index.html');
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // Carrega os computadores e desenha as linhas da tabela.
+        async function loadComputers() {
+            try {
+                const computers = await fetchAPI('/computers');
+                const tbody = document.getElementById('computersTableBody');
+                tbody.innerHTML = '';
+                computersById.clear();
+
+                if (computers.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-400 text-sm">Nenhum computador cadastrado ainda.</td></tr>`;
+                    return;
+                }
+
+                computers.forEach(pc => {
+                    computersById.set(pc.id, pc);
+                    let badge = '';
+                    if (pc.status === 'EM_DIA') badge = '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">Em Dia</span>';
+                    else if (pc.status === 'ATRASADO') badge = '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Atrasado</span>';
+                    else if (pc.status === 'EM_MANUTENCAO') badge = '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">Em Manutenção</span>';
+                    else badge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-800">${pc.status}</span>`;
+
+                    const nextDate = pc.next_maintenance_date ? new Date(pc.next_maintenance_date).toLocaleDateString('pt-BR') : 'N/A';
+
+                    tbody.innerHTML += `
+            <tr class="hover:bg-slate-50/50 transition-colors">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="font-bold text-slate-900 text-sm">${pc.unique_code}</div>
+                <div class="text-xs text-slate-500">${pc.name}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                <div>${pc.department || 'Geral'}</div>
+                <div class="text-xs text-slate-400">${pc.assigned_user || 'Não atribuído'}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">${nextDate}</td>
+              <td class="px-6 py-4 whitespace-nowrap">${badge}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button type="button" data-computer-action="manage" data-computer-id="${pc.id}" class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors mr-2">Gerenciar</button>
+                                <button type="button" data-computer-action="delete" data-computer-id="${pc.id}" class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors mr-2">Excluir</button>
+                <button type="button" data-computer-code="${pc.unique_code}" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">QR Code</button>
+              </td>
+            </tr>
+          `;
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Abre o cadastro vazio ou o formulário preenchido para edição.
+        function openModal(computer = null) {
+            const modal = document.getElementById('computerModal');
+            if (modal) modal.classList.remove('hidden');
+            document.querySelector('#computerModal h2').innerText = computer
+                ? 'Gerenciar Computador'
+                : 'Cadastrar Novo Computador';
+            document.getElementById('unique_code').value = computer?.unique_code || '';
+            document.getElementById('name').value = computer?.name || '';
+            document.getElementById('company_id').value = computer?.company_id || '';
+            document.getElementById('department').value = computer?.department || '';
+            document.getElementById('assigned_user').value = computer?.assigned_user || '';
+            document.getElementById('custom_interval_months').value = computer?.custom_interval_months ?? '';
+            document.getElementById('computerStatus').value = computer?.status || 'EM_DIA';
+            document.getElementById('unique_code').disabled = Boolean(computer);
+            document.getElementById('computerForm').dataset.editingId = computer?.id || '';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('computerModal');
+            if (modal) modal.classList.add('hidden');
+            const form = document.getElementById('computerForm');
+            if (form) {
+                form.reset();
+                delete form.dataset.editingId;
+            }
+            document.querySelector('#computerModal h2').innerText = 'Cadastrar Novo Computador';
+            document.getElementById('unique_code').disabled = false;
+        }
+
+        // Abre o modal vazio ou preenche seus campos para edição.
+        function openCompanyModal(company = null) {
+            editingCompanyId = company?.id || null;
+            const modal = document.getElementById('companyModal');
+            if (modal) modal.classList.remove('hidden');
+            document.querySelector('#companyModal h2').innerText = editingCompanyId
+                ? 'Editar Empresa'
+                : 'Cadastrar Nova Empresa';
+            document.getElementById('companyName').value = company?.name || '';
+            document.getElementById('companyCnpj').value = company?.cnpj || '';
+            document.getElementById('companyContact').value = company?.contact_name || '';
+            document.getElementById('companyPhone').value = company?.phone || '';
+            document.getElementById('companyEmail').value = company?.email || '';
+            document.getElementById('companyAddress').value = company?.address || '';
+        }
+
+        function closeCompanyModal() {
+            const modal = document.getElementById('companyModal');
+            if (modal) modal.classList.add('hidden');
+            const form = document.getElementById('companyForm');
+            if (form) form.reset();
+            editingCompanyId = null;
+            document.querySelector('#companyModal h2').innerText = 'Cadastrar Nova Empresa';
+        }
+
+        // Abre o modal de usuário para cadastro ou edição.
+        function openUserModal(user = null) {
+            editingUserId = user?.id || null;
+            document.getElementById('userModal').classList.remove('hidden');
+            document.getElementById('userModalTitle').innerText = editingUserId
+                ? 'Editar Usuário Administrador'
+                : 'Cadastrar Usuário Administrador';
+            document.getElementById('userName').value = user?.name || '';
+            document.getElementById('userEmail').value = user?.email || '';
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('newPassword').required = !editingUserId;
+            document.getElementById('newPasswordLabel').innerText = editingUserId
+                ? 'Nova senha (opcional)'
+                : 'Senha';
+        }
+
+        // Fecha o formulário e limpa os campos de senha.
+        function closeUserModal() {
+            document.getElementById('userModal').classList.add('hidden');
+            document.getElementById('userForm').reset();
+            editingUserId = null;
+            document.getElementById('newPassword').required = true;
+            document.getElementById('newPasswordLabel').innerText = 'Senha';
+        }
+
+        function closeQrModal() {
+            const modal = document.getElementById('qrModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        // Carrega empresas para preencher o campo select.
+        async function loadCompanies() {
+            try {
+                const companies = await fetchAPI('/companies');
+                const select = document.getElementById('company_id');
+                select.innerHTML = '<option value="">Selecione uma empresa</option>';
+
+                // Limpa e redesenha a tabela administrativa de empresas.
+                const tbody = document.getElementById('companiesTableBody');
+                tbody.innerHTML = '';
+                companiesById.clear();
+
+                if (!companies.length) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="px-5 py-6 text-center text-sm text-slate-500">Nenhuma empresa cadastrada.</td></tr>';
+                }
+
+                companies.forEach(company => {
+                    companiesById.set(company.id, company);
+                    const option = document.createElement('option');
+                    option.value = company.id;
+                    option.textContent = company.name;
+                    select.appendChild(option);
+
+                    // Mostra dados resumidos e ações disponíveis para a empresa.
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="px-5 py-4 text-sm font-semibold text-slate-800">${company.name}</td>
+                            <td class="px-5 py-4 text-sm text-slate-600">${company.contact_name || 'Não informado'}</td>
+                            <td class="px-5 py-4 text-sm text-slate-600">${company.email || 'Não informado'}</td>
+                            <td class="px-5 py-4 text-right whitespace-nowrap">
+                                <button type="button" data-company-action="edit" data-company-id="${company.id}" class="text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg text-xs font-bold mr-2">Editar</button>
+                                <button type="button" data-company-action="delete" data-company-id="${company.id}" class="text-red-600 hover:text-red-800 bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold">Excluir</button>
+                            </td>
+                        </tr>`;
+                });
+            } catch (err) {
+                console.error('Erro ao carregar empresas', err);
+            }
+        }
+
+        // Busca novamente a empresa escolhida e abre o modal de edição.
+        async function editCompany(id) {
+            try {
+                const companies = await fetchAPI('/companies');
+                const company = companies.find(item => item.id === id);
+                if (company) openCompanyModal(company);
+            } catch (err) {
+                alert('Erro ao carregar empresa: ' + err.message);
+            }
+        }
+
+        // Solicita confirmação antes de excluir uma empresa.
+        async function deleteCompany(id, name) {
+            if (!confirm(`Excluir a empresa "${name}"?`)) return;
+            try {
+                await fetchAPI(`/companies/${id}`, { method: 'DELETE' });
+                await loadCompanies();
+            } catch (err) {
+                alert('Erro ao excluir empresa: ' + err.message);
+            }
+        }
+
+        // Lista os administradores sem expor dados de senha.
+        async function loadUsers() {
+            try {
+                const users = await fetchAPI('/users');
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = users.length
+                    ? ''
+                    : '<tr><td colspan="4" class="px-5 py-6 text-center text-sm text-slate-500">Nenhum usuário cadastrado.</td></tr>';
+                usersById.clear();
+
+                users.forEach(user => {
+                    usersById.set(user.id, user);
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="px-5 py-4 text-sm font-semibold text-slate-800">${user.name}</td>
+                            <td class="px-5 py-4 text-sm text-slate-600">${user.email}</td>
+                            <td class="px-5 py-4 text-sm"><span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">ADMIN</span></td>
+                            <td class="px-5 py-4 text-right whitespace-nowrap">
+                                <button type="button" data-user-action="edit" data-user-id="${user.id}" class="text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg text-xs font-bold mr-2">Editar</button>
+                                <button type="button" data-user-action="delete" data-user-id="${user.id}" class="text-red-600 hover:text-red-800 bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold">Excluir</button>
+                            </td>
+                        </tr>`;
+                });
+            } catch (err) {
+                console.error('Erro ao carregar usuários', err);
+            }
+        }
+
+        // Abre a edição com os dados públicos do usuário selecionado.
+        function editUser(user) {
+            openUserModal(user);
+        }
+
+        // Exclui o administrador somente após confirmação.
+        async function deleteUser(id, name) {
+            if (!confirm(`Excluir o usuário "${name}"?`)) return;
+            try {
+                await fetchAPI(`/users/${id}`, { method: 'DELETE' });
+                await loadUsers();
+            } catch (err) {
+                alert('Erro ao excluir usuário: ' + err.message);
+            }
+        }
+
+        // Encaminha ações das tabelas sem handlers inline bloqueados pela CSP.
+        document.getElementById('companiesTableBody').addEventListener('click', (event) => {
+            const button = event.target.closest('button[data-company-action]');
+            if (!button) return;
+            const company = companiesById.get(button.dataset.companyId);
+            if (!company) return;
+            if (button.dataset.companyAction === 'edit') editCompany(company.id);
+            if (button.dataset.companyAction === 'delete') deleteCompany(company.id, company.name);
+        });
+
+        // Encaminha ações da tabela de usuários para os handlers correspondentes.
+        document.getElementById('usersTableBody').addEventListener('click', (event) => {
+            const button = event.target.closest('button[data-user-action]');
+            if (!button) return;
+            const user = usersById.get(button.dataset.userId);
+            if (!user) return;
+            if (button.dataset.userAction === 'edit') editUser(user);
+            if (button.dataset.userAction === 'delete') deleteUser(user.id, user.name);
+        });
+
+        async function showQRCode(code) {
+            try {
+                const data = await fetchAPI(`/computers/${code}/qrcode`);
+                document.getElementById('qrModalTitle').innerText = `QR Code — ${code}`;
+                document.getElementById('qrImage').src = data.image;
+                document.getElementById('qrDownloadBtn').href = data.image;
+                document.getElementById('qrLink').href = data.url;
+                document.getElementById('qrModal').classList.remove('hidden');
+            } catch (err) {
+                alert('Erro ao gerar QR Code');
+            }
+        }
+
+        // Exclui o computador somente após confirmar a remoção do histórico.
+        async function deleteComputer(id, name) {
+            const confirmed = confirm(`Excluir o computador "${name}"? O histórico de manutenção também será removido.`);
+            if (!confirmed) return;
+
+            try {
+                await fetchAPI(`/computers/${id}`, { method: 'DELETE' });
+                await loadComputers();
+            } catch (err) {
+                alert('Erro ao excluir computador: ' + err.message);
+            }
+        }
+
+        // Abre o QR Code por delegação de evento, respeitando a CSP do Helmet.
+        document.getElementById('computersTableBody').addEventListener('click', (event) => {
+            const manageButton = event.target.closest('button[data-computer-action="manage"]');
+            if (manageButton) {
+                const computer = computersById.get(manageButton.dataset.computerId);
+                if (computer) loadCompanies().then(() => openModal(computer));
+                return;
+            }
+
+            const deleteButton = event.target.closest('button[data-computer-action="delete"]');
+            if (deleteButton) {
+                const computer = computersById.get(deleteButton.dataset.computerId);
+                if (computer) deleteComputer(computer.id, computer.name);
+                return;
+            }
+
+            const button = event.target.closest('button[data-computer-code]');
+            if (button) showQRCode(button.dataset.computerCode);
+        });
+
+        // Fecha o modal por um listener explícito, sem onclick inline.
+        document.getElementById('closeQrModalBtn').addEventListener('click', closeQrModal);
+
+        document.getElementById('newComputerBtn').addEventListener('click', async () => {
+            await loadCompanies();
+            openModal();
+        });
+
+        document.getElementById('newCompanyBtn').addEventListener('click', () => {
+            openCompanyModal();
+        });
+
+        // Abre o mesmo formulário pelo painel da tabela de empresas.
+        document.getElementById('newCompanyTableBtn').addEventListener('click', () => {
+            openCompanyModal();
+        });
+
+        // Abre o cadastro de um novo administrador.
+        document.getElementById('newUserBtn').addEventListener('click', () => {
+            openUserModal();
+        });
+
+        document.getElementById('refreshListBtn').addEventListener('click', () => {
+            loadComputers();
+            loadCompanies();
+        });
+
+        document.getElementById('closeComputerModalBtn').addEventListener('click', closeModal);
+        document.getElementById('cancelComputerModalBtn').addEventListener('click', closeModal);
+        document.getElementById('closeCompanyModalBtn').addEventListener('click', closeCompanyModal);
+        document.getElementById('cancelCompanyModalBtn').addEventListener('click', closeCompanyModal);
+        document.getElementById('closeUserModalBtn').addEventListener('click', closeUserModal);
+        document.getElementById('cancelUserModalBtn').addEventListener('click', closeUserModal);
+
+        // Carrega as configurações globais para o painel de prazos.
+        async function loadMaintenanceSettings() {
+            try {
+                const settings = await fetchAPI('/settings/maintenance');
+                document.getElementById('defaultIntervalMonths').value = settings?.default_interval_months || 6;
+                document.getElementById('nearDueDays').value = settings?.near_due_days ?? 30;
+            } catch (err) {
+                console.error('Erro ao carregar configuração', err);
+            }
+        }
+
+        // Salva o intervalo padrão e os dias de aviso.
+        document.getElementById('maintenanceSettingsForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            try {
+                await fetchAPI('/settings/maintenance', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        default_interval_months: document.getElementById('defaultIntervalMonths').value,
+                        near_due_days: document.getElementById('nearDueDays').value,
+                    })
+                });
+                alert('Configuração salva com sucesso.');
+                await loadComputers();
+            } catch (err) {
+                alert('Erro ao salvar configuração: ' + err.message);
+            }
+        });
+
+        document.querySelectorAll('[data-modal]').forEach(modalEl => {
+            modalEl.addEventListener('click', (event) => {
+                if (event.target === modalEl) {
+                    if (modalEl.id === 'computerModal') closeModal();
+                    if (modalEl.id === 'companyModal') closeCompanyModal();
+                    if (modalEl.id === 'userModal') closeUserModal();
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeModal();
+                closeCompanyModal();
+                closeQrModal();
+                closeUserModal();
+            }
+        });
+
+        document.getElementById('companyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            try {
+                const payload = {
+                    name: document.getElementById('companyName').value,
+                    cnpj: document.getElementById('companyCnpj').value,
+                    contact_name: document.getElementById('companyContact').value,
+                    phone: document.getElementById('companyPhone').value,
+                    email: document.getElementById('companyEmail').value,
+                    address: document.getElementById('companyAddress').value,
+                };
+
+                // Escolhe o endpoint de acordo com o modo do formulário.
+                await fetchAPI(editingCompanyId ? `/companies/${editingCompanyId}` : '/companies', {
+                    method: editingCompanyId ? 'PUT' : 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                closeCompanyModal();
+                document.getElementById('companyForm').reset();
+                await loadCompanies();
+            } catch (err) {
+                alert('Erro ao salvar empresa: ' + err.message);
+            }
+        });
+
+        // Envia cadastro ou edição de administrador para a API.
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('userName').value,
+                email: document.getElementById('userEmail').value,
+                password: document.getElementById('newPassword').value,
+                currentPassword: document.getElementById('currentPassword').value
+            };
+
+            try {
+                await fetchAPI(editingUserId ? `/users/${editingUserId}` : '/users', {
+                    method: editingUserId ? 'PUT' : 'POST',
+                    body: JSON.stringify(payload)
+                });
+                closeUserModal();
+                await loadUsers();
+            } catch (err) {
+                alert('Erro ao salvar usuário: ' + err.message);
+            }
+        });
+
+        document.getElementById('computerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                unique_code: document.getElementById('unique_code').value,
+                name: document.getElementById('name').value,
+                company_id: document.getElementById('company_id').value,
+                department: document.getElementById('department').value,
+                assigned_user: document.getElementById('assigned_user').value,
+                // Envia número ou null, nunca uma string vazia para um campo inteiro.
+                custom_interval_months: document.getElementById('custom_interval_months').value === ''
+                    ? null
+                    : Number(document.getElementById('custom_interval_months').value),
+                status: document.getElementById('computerStatus').value
+            };
+
+            try {
+                const editingId = document.getElementById('computerForm').dataset.editingId;
+                await fetchAPI(editingId ? `/computers/${editingId}` : '/computers', {
+                    method: editingId ? 'PUT' : 'POST',
+                    body: JSON.stringify(payload)
+                });
+                closeModal();
+                document.getElementById('computerForm').reset();
+                loadComputers();
+            } catch (err) {
+                alert('Erro ao cadastrar computador: ' + err.message);
+            }
+        });
+
+        loadComputers();
+        loadCompanies();
+        loadUsers();
+        loadMaintenanceSettings();
+    </script>
+</body>
+
+</html>

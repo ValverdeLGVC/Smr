@@ -1,0 +1,173 @@
+// Gera o cliente TypeScript usado pela aplicação.
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Define o MySQL como banco e lê sua URL do ambiente.
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------- ENUMS: valores fechados usados pelo domínio ----------------
+enum Role {
+  ADMIN
+  TECHNICIAN
+}
+
+enum ComputerStatus {
+  EM_DIA
+  PROXIMO_VENCIMENTO
+  ATRASADO
+  EM_MANUTENCAO
+  COM_PROBLEMA
+}
+
+enum MaintenanceStatus {
+  AGENDADA
+  EM_ANDAMENTO
+  CONCLUIDA
+  CANCELADA
+}
+
+enum Priority {
+  BAIXA
+  MEDIA
+  ALTA
+  URGENTE
+}
+
+enum EvaluationStatus {
+  AGUARDANDO_AVALIACAO
+  EM_ANALISE
+  DIAGNOSTICO_REALIZADO
+  AGUARDANDO_PECA
+  RESOLVIDO
+  ENCERRADO
+}
+
+// ---------------- MODELS: tabelas, campos e relacionamentos ----------------
+
+// Armazena configurações globais de prazo e identificação.
+model SystemSetting {
+  id                      Int      @id @default(autoincrement())
+  system_name             String   @default("Sistema de Gestão de Manutenção") @db.VarChar(100)
+  company_name            String   @default("Minha Empresa TI") @db.VarChar(100)
+  default_interval_months Int      @default(6)
+  near_due_days           Int      @default(30)
+  created_at              DateTime @default(now())
+  updated_at              DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+// Representa administradores e técnicos autenticáveis.
+model User {
+  id                    String                 @id @default(uuid())
+  name                  String                 @db.VarChar(100)
+  email                 String                 @unique @db.VarChar(100)
+  password_hash         String                 @db.VarChar(255)
+  role                  Role                   @default(TECHNICIAN)
+  active                Boolean                @default(true)
+  created_at            DateTime               @default(now())
+  updated_at            DateTime               @updatedAt
+  Maintenances          Maintenance[]
+  TechnicalEvaluations  TechnicalEvaluation[]
+
+  @@map("users")
+}
+
+// Representa as empresas clientes dos ativos.
+model Company {
+  id           String     @id @default(uuid())
+  name         String     @db.VarChar(150)
+  cnpj         String?    @db.VarChar(20)
+  contact_name String?    @db.VarChar(100)
+  phone        String?    @db.VarChar(20)
+  email        String?    @db.VarChar(100)
+  address      String?    @db.Text
+  active       Boolean    @default(true)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+  Computers    Computer[]
+
+  @@map("companies")
+}
+
+// Representa cada computador monitorado.
+model Computer {
+  id                     String                @id @default(uuid())
+  unique_code            String                @unique @db.VarChar(50) // Ex: PC-ABC-0001
+  name                   String                @db.VarChar(100)
+  company_id             String
+  patrimony              String?               @db.VarChar(50)
+  serial_number          String?               @db.VarChar(100)
+  department             String?               @db.VarChar(100)
+  assigned_user          String?               @db.VarChar(100)
+  brand                  String?               @db.VarChar(50)
+  model                  String?               @db.VarChar(100)
+  processor              String?               @db.VarChar(100)
+  ram_memory             String?               @db.VarChar(50)
+  storage                String?               @db.VarChar(100)
+  operational_system     String?               @db.VarChar(100)
+  purchase_date          DateTime?             @db.Date
+  custom_interval_months Int?                  // Se null, usa global
+  last_maintenance_date  DateTime?
+  next_maintenance_date  DateTime?
+  status                 ComputerStatus        @default(EM_DIA)
+  observations           String?               @db.Text
+  active                 Boolean               @default(true)
+  created_at             DateTime              @default(now())
+  updated_at             DateTime              @updatedAt
+
+  Company              Company               @relation(fields: [company_id], references: [id])
+  Maintenances         Maintenance[]
+  TechnicalEvaluations TechnicalEvaluation[]
+
+  @@map("computers")
+}
+
+// Registra o histórico e o andamento de manutenções.
+model Maintenance {
+  id                   String                @id @default(uuid())
+  computer_id          String
+  user_id              String
+  status               MaintenanceStatus     @default(CONCLUIDA)
+  started_at           DateTime
+  completed_at         DateTime?
+  initial_observations String?               @db.Text
+  procedures_done      String?               @db.Text
+  issues_found         String?               @db.Text
+  created_at           DateTime              @default(now())
+  updated_at           DateTime              @updatedAt
+
+  Computer             Computer              @relation(fields: [computer_id], references: [id], onDelete: Cascade)
+  User                 User                  @relation(fields: [user_id], references: [id])
+  TechnicalEvaluations TechnicalEvaluation[]
+
+  @@map("maintenances")
+}
+
+// Registra problemas técnicos e suas resoluções.
+model TechnicalEvaluation {
+  id                  String           @id @default(uuid())
+  computer_id         String
+  maintenance_id      String?
+  technician_id       String
+  problem_description String           @db.Text
+  occurrence_date     DateTime
+  priority            Priority         @default(MEDIA)
+  status              EvaluationStatus @default(AGUARDANDO_AVALIACAO)
+  diagnostic          String?          @db.Text
+  applied_solution    String?          @db.Text
+  resolution_date     DateTime?
+  observations        String?          @db.Text
+  created_at          DateTime         @default(now())
+  updated_at          DateTime         @updatedAt
+
+  Computer            Computer         @relation(fields: [computer_id], references: [id], onDelete: Cascade)
+  Maintenance         Maintenance?     @relation(fields: [maintenance_id], references: [id], onDelete: SetNull)
+  Technician          User             @relation(fields: [technician_id], references: [id])
+
+  @@map("technical_evaluations")
+}

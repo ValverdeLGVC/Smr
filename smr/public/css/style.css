@@ -1,0 +1,326 @@
+/* Carrega a família tipográfica compartilhada pelo frontend. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+
+/* Define a tipografia e o comportamento de rolagem das páginas. */
+body {
+    font-family: 'Inter', sans-serif;
+    scroll-behavior: smooth;
+}
+
+/* Mantém cada tela administrativa ocupando toda a altura disponível. */
+.app-page {
+    min-height: 100vh;
+}
+
+/* Fixa a navegação lateral no lado esquerdo em telas grandes. */
+.app-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 40;
+    display: flex;
+    width: 16rem;
+    flex-direction: column;
+    background: #0f172a;
+    color: #f8fafc;
+    box-shadow: 8px 0 24px rgba(15, 23, 42, 0.12);
+    transition: transform 220ms ease;
+}
+
+/* Remove a sidebar da tela quando o usuário a recolhe em qualquer viewport. */
+.app-page.sidebar-collapsed .app-sidebar {
+    transform: translateX(-100%);
+}
+
+/* Reserva a área superior da sidebar para a marca do sistema. */
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 5rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+/* Define o tamanho estável do ícone da marca. */
+.sidebar-brand img {
+    width: 2.25rem;
+    height: 2.25rem;
+}
+
+/* Impede que o texto da marca force a largura da navegação. */
+.sidebar-brand-text {
+    min-width: 0;
+}
+
+/* Coloca nome e subtítulo da marca em linhas separadas. */
+.sidebar-brand-text strong,
+.sidebar-brand-text span {
+    display: block;
+}
+
+/* Estiliza o nome principal da marca. */
+.sidebar-brand-text strong {
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+}
+
+/* Estiliza o subtítulo sem competir com o nome. */
+.sidebar-brand-text span {
+    margin-top: 0.15rem;
+    color: #94a3b8;
+    font-size: 0.7rem;
+}
+
+/* Organiza os links verticalmente e ocupa o espaço livre. */
+.sidebar-nav {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.25rem 0.75rem;
+}
+
+/* Define alvos confortáveis para mouse e toque nos links e no logout. */
+.sidebar-link,
+.sidebar-logout {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 2.9rem;
+    padding: 0.7rem 0.85rem;
+    border: 0;
+    border-radius: 0.65rem;
+    color: #cbd5e1;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 160ms ease, color 160ms ease;
+}
+
+/* Destaca a navegação quando o usuário interage com ela. */
+.sidebar-link:hover,
+.sidebar-link:focus-visible,
+.sidebar-logout:hover,
+.sidebar-logout:focus-visible {
+    background: #1e293b;
+    color: #ffffff;
+    outline: none;
+}
+
+/* Identifica visualmente a página atualmente aberta. */
+.sidebar-link.is-active {
+    background: #1d4ed8;
+    color: #ffffff;
+}
+
+/* Mantém os ícones dos links alinhados e com tamanho consistente. */
+.sidebar-link svg,
+.sidebar-logout svg {
+    flex: 0 0 auto;
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    fill: none;
+}
+
+/* Separa o botão de sair dos links de navegação. */
+.sidebar-footer {
+    padding: 0.75rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+/* Faz o botão de logout ocupar toda a largura útil. */
+.sidebar-logout {
+    width: 100%;
+    cursor: pointer;
+    background: transparent;
+    text-align: left;
+}
+
+/* Desloca o conteúdo para a direita da sidebar no desktop. */
+.app-main {
+    min-width: 0;
+    margin-left: 16rem !important;
+    padding-bottom: 5rem !important;
+    transition: margin-left 220ms ease;
+}
+
+/* Libera toda a largura para o conteúdo quando a sidebar está recolhida. */
+.app-page.sidebar-collapsed .app-main {
+    margin-left: 0 !important;
+}
+
+/* Esconde o botão de menu no desktop, onde a sidebar já está aberta. */
+.sidebar-toggle {
+    position: fixed;
+    right: 0.85rem;
+    bottom: 0.85rem;
+    z-index: 50;
+    display: inline-flex;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.65rem;
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+/* Desenha o ícone de hambúrguer dentro do botão de menu. */
+.sidebar-toggle svg {
+    width: 1.35rem;
+    height: 1.35rem;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+}
+
+/* Cria a camada escura atrás da sidebar aberta no celular. */
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: none;
+    background: rgba(15, 23, 42, 0.55);
+}
+
+/* Permite consultar tabelas largas com gesto horizontal no celular. */
+.table-scroll {
+    /* O !important vence overflow-hidden usado junto nas classes Tailwind. */
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Regras específicas para telas de celular e tablets pequenos. */
+@media (max-width: 767px) {
+    /* Mantém a sidebar fora da tela até o botão ser acionado. */
+    .app-sidebar {
+        width: min(18rem, 86vw);
+        transform: translateX(-100%);
+    }
+
+    /* Desliza a sidebar para dentro quando o menu está aberto. */
+    .app-page.sidebar-open .app-sidebar {
+        transform: translateX(0);
+    }
+
+    /* Mostra o overlay somente enquanto a sidebar está aberta. */
+    .app-page.sidebar-open .sidebar-overlay {
+        display: block;
+    }
+
+    /* Remove a margem reservada para a sidebar no celular. */
+    .app-main {
+        margin-left: 0 !important;
+    }
+
+    /* Mantém o cabeçalho confortável no celular. */
+    .mobile-page-header {
+        min-height: 4.5rem;
+    }
+
+    /* Reduz o espaçamento lateral para aproveitar a largura do celular. */
+    .responsive-main {
+        padding: 1rem;
+    }
+
+    /* Empilha título e ação principal quando não há largura suficiente. */
+    .responsive-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    /* Impede que filhos do cabeçalho criem overflow horizontal. */
+    .responsive-heading > * {
+        max-width: 100%;
+    }
+
+    /* Permite que ações administrativas quebrem linha. */
+    .responsive-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    /* Dá largura equilibrada aos botões em linhas pequenas. */
+    .responsive-actions > * {
+        flex: 1 1 9rem;
+        min-height: 2.75rem;
+    }
+
+    /* Diminui o espaço entre os cartões de resumo no celular. */
+    .responsive-card-grid {
+        gap: 0.75rem;
+    }
+
+    /* Evita que conteúdo longo estoure o cartão. */
+    .responsive-card-grid > * {
+        min-width: 0;
+    }
+
+    /* Mantém colunas legíveis e permite rolagem horizontal controlada. */
+    .table-scroll table {
+        min-width: 42rem;
+    }
+}
+
+/* Remove transições para usuários que preferem menos movimento. */
+@media (prefers-reduced-motion: reduce) {
+    .app-sidebar,
+    .sidebar-link,
+    .sidebar-logout {
+        transition: none;
+    }
+}
+
+/* Define o brilho pulsante usado em alertas de status. */
+@keyframes pulseGlow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 15px 10px rgba(239, 68, 68, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+/* Aplica a animação aos elementos que precisam chamar atenção. */
+.alert-pulse {
+    animation: pulseGlow 2s infinite;
+}
+
+/* Cria o efeito translúcido usado nos modais. */
+.glass {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Personaliza a barra de rolagem das páginas. */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}

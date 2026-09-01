@@ -1,0 +1,240 @@
+<!-- Declara o documento como HTML5. -->
+<!DOCTYPE html>
+<!-- Página pública de consulta por código do computador. -->
+<html lang="pt-BR">
+
+<!-- Metadados, Tailwind e estilos compartilhados. -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status do Computador</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+
+    body {
+        font-family: 'Inter', sans-serif;
+        scroll-behavior: smooth;
+    }
+
+    /* Animação suave para o banner de status no QR Code */
+    @keyframes pulseGlow {
+        0% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 15px 10px rgba(239, 68, 68, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+    }
+
+    .alert-pulse {
+        animation: pulseGlow 2s infinite;
+    }
+
+    /* Efeito Glassmorphism (Vidro Fosco) para os modais */
+    .glass {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* Custom Scrollbar moderna */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+    }
+</style>
+
+<!-- Corpo responsivo exibido após a consulta pública. -->
+<body class="bg-slate-100 text-slate-800 antialiased">
+
+    <div id="app" class="max-w-md mx-auto min-h-screen bg-white shadow-xl flex flex-col relative hidden">
+
+        <!-- Cabeçalho -->
+        <header class="bg-slate-800 text-white p-6 rounded-b-3xl shadow-md text-center">
+            <h1 class="text-2xl font-black tracking-wider" id="pcCode">CARREGANDO...</h1>
+            <p class="text-slate-300 text-sm mt-1" id="companyName">Aguarde...</p>
+        </header>
+
+        <!-- Corpo -->
+        <main class="flex-1 p-6 flex flex-col items-center">
+            <div class="mb-2 text-4xl">🖥️</div>
+            <h2 class="text-lg font-bold text-slate-700 mb-6" id="pcName">---</h2>
+
+            <!-- Banner de Status (Muda a cor via JS) -->
+            <div id="statusBanner"
+                class="w-full text-center py-4 rounded-lg border-2 font-bold text-lg mb-6 flex flex-col items-center justify-center transition-colors">
+                <span id="statusIcon" class="text-2xl mb-1"></span>
+                <span id="statusText">CARREGANDO STATUS</span>
+            </div>
+
+            <!-- Datas -->
+            <div class="w-full bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6 shadow-sm">
+                <div class="flex justify-between border-b border-slate-200 pb-2 mb-2">
+                    <span class="text-slate-500 text-sm">Última Manutenção:</span>
+                    <span class="font-semibold text-sm" id="lastMaintenance">---</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500 text-sm">Próxima Manutenção:</span>
+                    <span class="font-semibold text-sm" id="nextMaintenance">---</span>
+                </div>
+            </div>
+
+            <!-- Contador Real-time -->
+            <div class="w-full text-center">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2" id="counterLabel">TEMPO
+                    RESTANTE</p>
+                <div class="bg-slate-800 text-white rounded-xl p-4 shadow-inner font-mono">
+                    <div id="countdown" class="text-xl md:text-2xl font-light leading-relaxed">
+                        Calculando...
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="errorScreen"
+        class="max-w-md mx-auto min-h-screen bg-white flex flex-col items-center justify-center hidden">
+        <div class="text-6xl mb-4">⚠️</div>
+        <h1 class="text-xl font-bold text-slate-800 mb-2">Computador não encontrado</h1>
+        <p class="text-slate-500 text-center px-6">Verifique se o QR Code lido está correto ou se o ativo foi removido
+            do sistema.</p>
+    </div>
+
+    <script>
+        // --- MOTOR DE CONTAGEM REGRESSIVA PURA NO FRONTEND ---
+        // Atualiza a contagem regressiva até o próximo vencimento.
+        function updateCounter(targetDateStr) {
+            const targetDate = new Date(targetDateStr);
+            const now = new Date();
+            const diffMs = targetDate - now;
+            const isDelayed = diffMs < 0;
+
+            const absDiff = Math.abs(diffMs);
+
+            // Cálculos matemáticos de tempo
+            const dias = Math.floor(absDiff / (1000 * 60 * 60 * 24));
+            const horas = Math.floor((absDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutos = Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60));
+            const segundos = Math.floor((absDiff % (1000 * 60)) / 1000);
+
+            // Aproximação de meses para o display (considerando mês comercial de 30 dias)
+            const meses = Math.floor(dias / 30);
+            const diasRestantes = dias % 30;
+
+            let parts = [];
+            if (meses > 0) parts.push(`<span class="font-bold">${meses}</span> meses`);
+            if (diasRestantes > 0) parts.push(`<span class="font-bold">${diasRestantes}</span> dias`);
+            parts.push(`<span class="font-bold">${horas.toString().padStart(2, '0')}</span> horas`);
+            parts.push(`<span class="font-bold">${minutos.toString().padStart(2, '0')}</span> min`);
+            parts.push(`<span class="font-bold">${segundos.toString().padStart(2, '0')}</span> seg`);
+
+            document.getElementById('countdown').innerHTML = parts.join('<br>');
+
+            // Atualiza os labels
+            const label = document.getElementById('counterLabel');
+            if (isDelayed) {
+                label.innerText = '⚠️ ATRASADO HÁ';
+                label.classList.replace('text-slate-400', 'text-red-500');
+            } else {
+                label.innerText = 'TEMPO RESTANTE';
+                label.classList.replace('text-red-500', 'text-slate-400');
+            }
+        }
+
+        // --- CARREGAMENTO DE DADOS ---
+        // Lê o código da URL, consulta a API e preenche a página.
+        async function init() {
+            // Pega o código da URL: qr-scanner.html?code=PC-ABC-0001
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+
+            if (!code) {
+                document.getElementById('errorScreen').classList.remove('hidden');
+                return;
+            }
+
+            try {
+                // Faz a requisição na rota pública (sem token)
+                const response = await fetch(`/api/computers/code/${code}`);
+
+                if (!response.ok) throw new Error('Not found');
+
+                const pc = await response.json();
+
+                // Preenche a tela
+                document.getElementById('app').classList.remove('hidden');
+                document.getElementById('pcCode').innerText = pc.unique_code;
+                document.getElementById('companyName').innerText = pc.Company?.name || 'Empresa Padrão';
+                document.getElementById('pcName').innerText = pc.name;
+
+                // Formatar datas simples
+                const formatDate = (dateStr) => {
+                    if (!dateStr) return 'N/A';
+                    const d = new Date(dateStr);
+                    return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                };
+
+                document.getElementById('lastMaintenance').innerText = formatDate(pc.last_maintenance_date);
+                document.getElementById('nextMaintenance').innerText = formatDate(pc.next_maintenance_date);
+
+                // Ajusta cores baseadas no status
+                const banner = document.getElementById('statusBanner');
+                const sText = document.getElementById('statusText');
+                const sIcon = document.getElementById('statusIcon');
+
+                if (pc.status === 'EM_DIA' || pc.status === 'PROXIMO_VENCIMENTO') {
+                    banner.classList.add('bg-green-50', 'border-green-400', 'text-green-700');
+                    sIcon.innerText = '✓';
+                    sText.innerText = 'MANUTENÇÃO EM DIA';
+                } else if (pc.status === 'ATRASADO') {
+                    banner.classList.add('bg-red-50', 'border-red-500', 'text-red-700');
+                    sIcon.innerText = '⚠️';
+                    sText.innerText = 'MANUTENÇÃO ATRASADA';
+                } else if (pc.status === 'EM_MANUTENCAO') {
+                    banner.classList.add('bg-yellow-50', 'border-yellow-400', 'text-yellow-700');
+                    sIcon.innerText = '🔧';
+                    sText.innerText = 'EM MANUTENÇÃO';
+                }
+
+                // Inicia o loop infinito do contador
+                if (pc.next_maintenance_date && pc.status !== 'EM_MANUTENCAO') {
+                    updateCounter(pc.next_maintenance_date); // Roda imediatamente
+                    setInterval(() => {
+                        updateCounter(pc.next_maintenance_date);
+                    }, 1000); // Roda a cada 1 segundo
+                } else {
+                    document.getElementById('countdown').innerHTML = 'Contador pausado<br>(Em Manutenção)';
+                }
+
+            } catch (err) {
+                document.getElementById('errorScreen').classList.remove('hidden');
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

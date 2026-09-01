@@ -1,0 +1,49 @@
+# Define os serviços necessários para executar a aplicação.
+version: '3.8'
+
+services:
+  # Serviço que executa a API Node.js e serve o frontend.
+  api:
+    # Constrói a imagem usando o Dockerfile da raiz.
+    build: .
+    container_name: prev_api
+    restart: unless-stopped
+    # Publica a porta do container na máquina local.
+    ports:
+      - "3000:3000"
+    # Fornece configuração da API e credenciais de desenvolvimento.
+    environment:
+      - PORT=3000
+      - DATABASE_URL=mysql://root:root123@db:3306/prev_maintenance_db
+      - JWT_SECRET=sua_senha_secreta_aqui_123
+      - TZ=America/Sao_Paulo
+    volumes:
+      - ./public:/usr/src/app/public # <-- ESSE É O TÚNEL MÁGICO
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Serviço responsável pela persistência relacional.
+  db:
+    # Usa a imagem oficial do MySQL 8.
+    image: mysql:8.0
+    container_name: prev_mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=root123
+      - MYSQL_DATABASE=prev_maintenance_db
+      - TZ=America/Sao_Paulo
+    ports:
+      - "3306:3306"
+    # Mantém os dados mesmo que o container seja recriado.
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # Só considera o banco pronto quando o mysqladmin responde.
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+
+volumes:
+  # Volume nomeado para os dados não sumirem quando o container desligar.
+  mysql_data:

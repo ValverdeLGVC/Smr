@@ -1,0 +1,6 @@
+# Dependências são instaladas dentro da imagem pelo npm install.
+node_modules
+# O build da imagem gera dist/ no estágio builder.
+dist
+# Segredos locais nunca devem ser enviados ao contexto Docker.
+.env

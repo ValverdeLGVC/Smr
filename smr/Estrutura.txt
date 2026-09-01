@@ -1,0 +1,30 @@
+ESTRUTURA DO SISTEMA SMR
+
+# Este arquivo e um mapa textual das pastas e da responsabilidade de cada uma.
+
+prev-system/
+├── public/                 # Todo o nosso Frontend vai aqui
+│   ├── css/
+│   ├── js/
+│   ├── index.html          # Login
+│   ├── dashboard.html      # Painel Admin
+│   ├── computers.html      # Lista de PCs
+│   ├── qr-scanner.html     # Página pública do QR Code
+│   └── ...
+├── src/                    # Nosso Backend
+│   ├── config/             # Configurações (Env, Prisma, etc)
+│   ├── controllers/        # Recebem a requisição, chamam o service, retornam resposta
+│   ├── middlewares/        # Auth, Validação, Tratamento de erros
+│   ├── routes/             # Definição dos endpoints REST
+│   ├── services/           # Regras de negócio (O coração do sistema)
+│   ├── utils/              # Funções de data, gerador de QR Code (Motor de Datas fica aqui)
+│   ├── app.ts              # Configuração do Express
+│   └── server.ts           # Ponto de entrada (App.listen)
+├── prisma/
+│   └── schema.prisma       # Definição do banco para o Prisma
+├── .env                    # Variáveis secretas
+├── .gitignore
+├── docker-compose.yml
+├── Dockerfile
+├── package.json
+└── tsconfig.json
